@@ -1,6 +1,7 @@
-flask
-sqlalchemy
-requests
 beautifulsoup4
+fabric
+flask
 flask-sqlalchemy
 psycopg2
+requests
+sqlalchemy
