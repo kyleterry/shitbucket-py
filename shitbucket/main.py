@@ -12,9 +12,6 @@ from sqlalchemy import schema, types, orm
 from sqlalchemy.engine import create_engine
 
 
-DB_URI = 'sqlite:////tmp/test.db'
-
-
 app = Flask(__name__)
 
 # Database...
