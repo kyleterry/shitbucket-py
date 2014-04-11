@@ -1,7 +1,9 @@
 import json
 from datetime import datetime
 from functools import wraps
+import getopt
 from time import mktime
+import sys
 
 from bs4 import BeautifulSoup
 from flask import Flask, request, abort, redirect
@@ -10,13 +12,14 @@ from sqlalchemy import schema, types, orm
 from sqlalchemy.engine import create_engine
 
 
-app = Flask('shitbucket')
+DB_URI = 'sqlite:////tmp/test.db'
+
+
+app = Flask(__name__)
 
 # Database...
 metadata = schema.MetaData()
-db_engine = create_engine('sqlite:////tmp/test.db', echo=True)
 
-metadata.bind = db_engine
 url_table = schema.Table('shitbct_url', metadata,
     schema.Column('id',
         types.Integer,
@@ -36,8 +39,6 @@ config_table = schema.Table('shitbct_config', metadata,
     schema.Column('value', types.String)
 )
 
-metadata.create_all(checkfirst=True)
-
 
 class ShitBucketUrl(object):
     pass
@@ -49,8 +50,17 @@ class ShitBucketConfig(object):
 orm.mapper(ShitBucketUrl, url_table)
 orm.mapper(ShitBucketConfig, config_table)
 
-session = orm.scoped_session(orm.sessionmaker(bind=db_engine, autoflush=True,
-                             autocommit=False, expire_on_commit=True))
+
+def make_db_session(app):
+    db_engine = create_engine(app.config['DB_URI'], echo=True)
+    metadata.bind = db_engine
+    metadata.create_all(checkfirst=True)
+
+    session = orm.scoped_session(orm.sessionmaker(bind=db_engine,
+                                                  autoflush=True,
+                                                  autocommit=False,
+                                                  expire_on_commit=True))
+    return session
 
 
 def add_url(url):
@@ -63,13 +73,13 @@ def add_url(url):
     item.url_title = url_title
 
     # Does the URL exist?
-    q = session.query(ShitBucketUrl).filter(ShitBucketUrl.url == url)
+    q = app.db_session.query(ShitBucketUrl).filter(ShitBucketUrl.url == url)
     if q.count() > 0:
         return False
 
-    session.add(item)
-    session.flush()
-    session.commit()
+    app.db_session.add(item)
+    app.db_session.flush()
+    app.db_session.commit()
 
     return True
 
@@ -80,7 +90,7 @@ def auth(f):
         # TODO: is the application even configured?
 
         key = request.args.get('auth_key')
-        q = session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
+        q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
                                                    ShitBucketConfig.value==key)
         if q.count() == 0:
             abort(401)
@@ -91,6 +101,8 @@ def auth(f):
 @app.route('/')
 @auth
 def index():
+    urls = app.db_session.query(ShitBucketUrl).all()
+    print(urls[0].url_title)
     return 'Nothing to see here. Yet.'
 
 
@@ -104,10 +116,28 @@ def submit():
     abort(409)
 
 
-def get_app():
-    return app
+@app.route('/configure', methods=['GET', 'POST'])
+def configure():
+    pass
+
+
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, ':d', ['db=',])
+    except getopt.GetoptError:
+        print("Usage?")
+        sys.exit(1)
+    for opt, arg in opts:
+        if opt == '-h':
+            print("Usage?")
+            sys.exit()
+        elif opt in ('--db', '-d'):
+            app.config['DB_URI'] = arg
 
 
 if __name__ == '__main__':
+    main(sys.argv[1:])
+    session = make_db_session(app)
+    app.db_session = session
     app.debug = True
     app.run()
