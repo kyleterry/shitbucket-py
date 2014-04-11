@@ -19,5 +19,5 @@ git clone https://github.com/kyleterry/shitbucket
 mkvirtualenv -p /usr/bin/python3 shitbucket
 cd /path/to/shitbucket
 pip install -r requirements.txt
-python shitbucket/main.py --db="sqlite:///tmp/shitbucket.db"
+python shitbucket/main.py --db="sqlite:////tmp/shitbucket.db"
 ```
