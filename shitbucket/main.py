@@ -10,6 +10,7 @@ from flask import Flask, request, abort, redirect, render_template
 import requests
 from sqlalchemy import schema, types, orm
 from sqlalchemy.engine import create_engine
+from werkzeug.contrib.fixers import ProxyFix
 
 
 app = Flask(__name__)
@@ -82,27 +83,35 @@ def add_url(url):
     return True
 
 
-def auth(f):
-    @wraps(f)
-    def func(*args, **kwargs):
-        # TODO: is the application even configured?
+def auth(*a, **k):
+    def _auth(f):
+        @wraps(f)
+        def func(*args, **kwargs):
+            # TODO: is the application even configured?
 
-        key = request.args.get('auth_key')
-        q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
-                                                   ShitBucketConfig.value==key)
-        if q.count() == 0:
-            q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key')
+            key = request.args.get('auth_key')
+            q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
+                                                    ShitBucketConfig.value==key)
             if q.count() == 0:
-                redirect('/configure')
-            else:
-                abort(401)
-        return f(*args, **kwargs)
-    return func
+                q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key')
+                if k['abort']:
+                    if q.count() == 0:
+                        redirect('/configure')
+                    else:
+                        abort(401)
+                else:
+                    kwargs['authenticated'] = False
+            return f(*args, **kwargs)
+        return func
+    if len(a) == 1 and callable(a[0]):
+        return _auth(a[0])
+    else:
+        return _auth
 
 
 @app.route('/')
-@auth
-def index():
+@auth(abort=False)
+def index(authenticated=True):
     urls = app.db_session.query(ShitBucketUrl).all()
     return render_template('index.html', urls=urls)
 
@@ -134,11 +143,13 @@ def main(argv):
             sys.exit()
         elif opt in ('--db', '-d'):
             app.config['DB_URI'] = arg
+    session = make_db_session(app)
+    app.db_session = session
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+    return app
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
-    session = make_db_session(app)
-    app.db_session = session
+    app = main(sys.argv[1:])
     app.debug = True
     app.run()
