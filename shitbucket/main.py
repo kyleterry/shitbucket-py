@@ -91,7 +91,11 @@ def auth(f):
         q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
                                                    ShitBucketConfig.value==key)
         if q.count() == 0:
-            abort(401)
+            q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key')
+            if q.count() == 0:
+                redirect('/configure')
+            else:
+                abort(401)
         return f(*args, **kwargs)
     return func
 
