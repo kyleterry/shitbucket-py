@@ -6,7 +6,7 @@ from time import mktime
 import sys
 
 from bs4 import BeautifulSoup
-from flask import Flask, request, abort, redirect
+from flask import Flask, request, abort, redirect, render_template
 import requests
 from sqlalchemy import schema, types, orm
 from sqlalchemy.engine import create_engine
@@ -99,8 +99,7 @@ def auth(f):
 @auth
 def index():
     urls = app.db_session.query(ShitBucketUrl).all()
-    print(urls[0].url_title)
-    return 'Nothing to see here. Yet.'
+    return render_template('index.html', urls=urls)
 
 
 @app.route('/submit', methods=['POST'])
@@ -115,7 +114,7 @@ def submit():
 
 @app.route('/configure', methods=['GET', 'POST'])
 def configure():
-    pass
+    return 'Not fucking configured'
 
 
 def main(argv):
