@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from functools import wraps
 import getopt
 from time import mktime
@@ -8,58 +7,14 @@ import sys
 from bs4 import BeautifulSoup
 from flask import Flask, request, abort, redirect, render_template
 import requests
-from sqlalchemy import schema, types, orm
-from sqlalchemy.engine import create_engine
 from werkzeug.contrib.fixers import ProxyFix
+
+from .routes import app as routes
+from .models import make_db_session, ShitBucketUrl, ShitBucketConfig
 
 
 app = Flask(__name__)
-
-# Database...
-metadata = schema.MetaData()
-
-url_table = schema.Table('shitbct_url', metadata,
-    schema.Column('id',
-        types.Integer,
-        schema.Sequence('shitbct_url_seq_id', optional=True),
-        primary_key=True),
-    schema.Column('url', types.Unicode(2000)),
-    schema.Column('url_title', types.Unicode(1024)),
-    schema.Column('public', types.Boolean(), default=False),
-    schema.Column('created_at', types.DateTime(), default=datetime.now)
-)
-
-config_table = schema.Table('shitbct_config', metadata,
-    schema.Column('id',
-        types.Integer,
-        schema.Sequence('shitbct_config_seq_id', optional=True),
-        primary_key=True),
-    schema.Column('key', types.String),
-    schema.Column('value', types.String)
-)
-
-
-class ShitBucketUrl(object):
-    pass
-
-
-class ShitBucketConfig(object):
-    pass
-
-orm.mapper(ShitBucketUrl, url_table)
-orm.mapper(ShitBucketConfig, config_table)
-
-
-def make_db_session(app):
-    db_engine = create_engine(app.config['DB_URI'], echo=True)
-    metadata.bind = db_engine
-    metadata.create_all(checkfirst=True)
-
-    session = orm.scoped_session(orm.sessionmaker(bind=db_engine,
-                                                  autoflush=True,
-                                                  autocommit=False,
-                                                  expire_on_commit=True))
-    return session
+app.add_blueprint(routes)
 
 
 def add_url(url):
@@ -108,27 +63,6 @@ def auth(*a, **k):
     else:
         return _auth
 
-
-@app.route('/')
-@auth(abort=False)
-def index(authenticated=True):
-    urls = app.db_session.query(ShitBucketUrl).all()
-    return render_template('index.html', urls=urls)
-
-
-@app.route('/submit', methods=['POST'])
-@auth
-def submit():
-    url = request.form['url']
-    result = add_url(url)
-    if result:
-        return redirect('/')
-    abort(409)
-
-
-@app.route('/configure', methods=['GET', 'POST'])
-def configure():
-    return 'Not fucking configured'
 
 
 def main(argv):
