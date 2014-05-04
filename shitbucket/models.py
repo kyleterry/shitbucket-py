@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from flask import current_app
 from sqlalchemy import schema, types, orm
 from sqlalchemy.engine import create_engine
 

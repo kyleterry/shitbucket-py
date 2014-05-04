@@ -1,13 +1,13 @@
 from functools import wraps
 
 from bs4 import BeautifulSoup
-from flask import Blueprint, abort, request, redirect, render_template
+from flask import (current_app, Blueprint, abort, request, redirect,
+                   render_template)
 import requests
 
-from shitbucket.models import ShitBucketConfig, ShitBucketUrl, make_db_session
+from shitbucket.models import ShitBucketConfig, ShitBucketUrl
 
 app = Blueprint('shitbucket', __name__, template_folder='templates')
-app = make_db_session(app)
 
 
 def auth(*a, **k):
@@ -17,10 +17,14 @@ def auth(*a, **k):
             # TODO: is the application even configured?
 
             key = request.args.get('auth_key')
-            q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key',
-                                                    ShitBucketConfig.value==key)
+            q = current_app.db_session.query(ShitBucketConfig).filter(
+                ShitBucketConfig.key == 'auth_key',
+                ShitBucketConfig.value == key
+            )
             if q.count() == 0:
-                q = app.db_session.query(ShitBucketConfig).filter(ShitBucketConfig.key=='auth_key')
+                q = current_app.db_session.query(ShitBucketConfig).filter(
+                    ShitBucketConfig.key == 'auth_key'
+                )
                 if k['abort']:
                     if q.count() == 0:
                         redirect('/configure')
@@ -46,13 +50,15 @@ def add_url(url):
     item.url_title = url_title
 
     # Does the URL exist?
-    q = app.db_session.query(ShitBucketUrl).filter(ShitBucketUrl.url == url)
+    q = current_app.db_session.query(ShitBucketUrl).filter(
+        ShitBucketUrl.url == url
+    )
     if q.count() > 0:
         return False
 
-    app.db_session.add(item)
-    app.db_session.flush()
-    app.db_session.commit()
+    current_app.db_session.add(item)
+    current_app.db_session.flush()
+    current_app.db_session.commit()
 
     return True
 
@@ -60,18 +66,24 @@ def add_url(url):
 @app.route('/')
 @auth(abort=False)
 def index(authenticated=True):
-    urls = app.db_session.query(ShitBucketUrl).all()
+    urls = current_app.db_session.query(ShitBucketUrl).all()
     return render_template('index.html', urls=urls)
 
 
-@app.route('/submit', methods=['POST'])
+@app.route('/url/submit', methods=['POST'])
 @auth
-def submit():
+def url_submit():
     url = request.form['url']
     result = add_url(url)
     if result:
         return redirect('/')
     abort(409)
+
+
+@app.route('/bash-history/submit', methods=['POST'])
+@auth
+def bash_history_submit():
+    pass
 
 
 @app.route('/configure', methods=['GET', 'POST'])
