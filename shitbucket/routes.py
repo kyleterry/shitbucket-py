@@ -16,6 +16,11 @@ def auth(*a, **k):
         def func(*args, **kwargs):
             # TODO: is the application even configured?
 
+            if not hasattr(k, 'abort'):
+                do_abort = True
+            else:
+                do_abort = k['abort']
+
             key = request.args.get('auth_key')
             q = current_app.db_session.query(ShitBucketConfig).filter(
                 ShitBucketConfig.key == 'auth_key',
@@ -25,7 +30,7 @@ def auth(*a, **k):
                 q = current_app.db_session.query(ShitBucketConfig).filter(
                     ShitBucketConfig.key == 'auth_key'
                 )
-                if k['abort']:
+                if do_abort:
                     if q.count() == 0:
                         redirect('/configure')
                     else:
