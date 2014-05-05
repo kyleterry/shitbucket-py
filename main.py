@@ -9,7 +9,7 @@ from shitbucket.routes import app as routes
 from shitbucket.models import make_db_session, ShitBucketUrl, ShitBucketConfig
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='shitbucket/static')
 app.register_blueprint(routes)
 
 

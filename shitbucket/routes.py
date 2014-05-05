@@ -16,7 +16,7 @@ def auth(*a, **k):
         def func(*args, **kwargs):
             # TODO: is the application even configured?
 
-            if not hasattr(k, 'abort'):
+            if 'abort' not in k:
                 do_abort = True
             else:
                 do_abort = k['abort']
@@ -32,9 +32,9 @@ def auth(*a, **k):
                 )
                 if do_abort:
                     if q.count() == 0:
-                        redirect('/configure')
+                        return redirect('/configure')
                     else:
-                        abort(401)
+                        return abort(401)
                 else:
                     kwargs['authenticated'] = False
             return f(*args, **kwargs)
@@ -71,7 +71,12 @@ def add_url(url):
 @app.route('/')
 @auth(abort=False)
 def index(authenticated=True):
-    urls = current_app.db_session.query(ShitBucketUrl).all()
+    if authenticated:
+        urls = current_app.db_session.query(ShitBucketUrl).all()
+    else:
+        urls = current_app.db_session.query(ShitBucketUrl).filter(
+            ShitBucketUrl.public == True
+        )
     return render_template('index.html', urls=urls)
 
 

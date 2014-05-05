@@ -14,6 +14,8 @@
     <p><small>{{ url.url }}</small></p>
     <p><small>Added: {{ url.created_at }}</small></p>
 </li>
+{% else %}
+<p>There is nothing here but silence.</p>
 {% endfor %}
 </ul>
 {% endblock %}
