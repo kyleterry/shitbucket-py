@@ -7,10 +7,17 @@
         <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
     </head>
     <body>
-        <h1>Shitbucket</h1>
-        <hr>
+        <header>
+            <div id="header-content">
+                <h1>Shitbucket</h1>
+            </div>
+        </header>
+        <div id="content">
         {% block page_title %}{% endblock %}
         {% block content %}{% endblock %}
+        </div>
+        <div id="footer-content">
         {% block footer %}{% endblock %}
+        </div>
     </body>
 </html>
