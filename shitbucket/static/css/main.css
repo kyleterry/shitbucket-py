@@ -6,6 +6,7 @@ body {
 
 a {
     color: #F77823;
+    text-decoration: none;
 }
 
 #header-content {
