@@ -23,3 +23,13 @@ a {
     width: 960px;
     margin: 0 auto;
 }
+
+.url-item {
+    border: 1px solid #60B999;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+.url-item:last-child {
+    margin-bottom: 0;
+}

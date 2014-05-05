@@ -5,17 +5,15 @@
 {% endblock %}
 
 {% block content %}
-<ul>
 {% for url in urls %}
-<li>
-    <p>
+<div class="url-item">
+    <h3>
         <a href="{{ url.url }}" target="_blank">{{ url.url_title }}</a>
-    </p>
+    </h3>
     <p><small>{{ url.url }}</small></p>
     <p><small>Added: {{ url.created_at }}</small></p>
-</li>
+</div>
 {% else %}
 <p>There is nothing here but silence.</p>
 {% endfor %}
-</ul>
 {% endblock %}
