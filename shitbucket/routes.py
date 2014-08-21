@@ -68,6 +68,11 @@ def add_url(url):
     return True
 
 
+@app.errorhandler(409)
+def conflict(e):
+    return 'Conflicting with my other personality. I\'ve gone mental.'
+
+
 @app.route('/')
 @auth(abort=False)
 def index(authenticated=True):
@@ -86,7 +91,7 @@ def url_submit():
     url = request.form['url']
     result = add_url(url)
     if result:
-        return redirect('/')
+        return 'I heard the bell ring, so I ran to class.'
     abort(409)
 
 

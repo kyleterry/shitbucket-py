@@ -5,14 +5,19 @@ Sorry mom.
 
 ## Requirements
 
+* Computer
 * Python 3
 * sqlite3
 * A brain
+* Oat meal
+* Bathroom (because you should be drinking 8 glasses a day)
 
-## Install for Dev
+## Install for Devopment (or in my case, production)
 
 Make sure you have virtualenv or virtualenvwrapper installed. Not going to
 teach you.
+
+Yo, you don't gotta use sqlite, but you can and stuff. I like Postgresql. Cool.
 
 ```bash
 git clone https://github.com/kyleterry/shitbucket
