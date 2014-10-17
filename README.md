@@ -26,3 +26,6 @@ cd /path/to/shitbucket
 pip install -r requirements.txt
 python shitbucket/main.py --db="sqlite:////tmp/shitbucket.db"
 ```
+
+This is not a good example of my coding abilities. In fact, this is me at my
+worst.
