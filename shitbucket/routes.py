@@ -37,6 +37,7 @@ def auth(*a, **k):
                         return abort(401)
                 else:
                     kwargs['authenticated'] = False
+            kwargs['auth_key'] = key
             return f(*args, **kwargs)
         return func
     if len(a) == 1 and callable(a[0]):
@@ -45,14 +46,17 @@ def auth(*a, **k):
         return _auth
 
 
-def add_url(url):
-    resp = requests.get(url)
+def add_url(url, source='api'):
+    resp = requests.get(url, verify=False)
     soup = BeautifulSoup(resp.text)
-    url_title = soup.title.string
+    url_title = None
+    if soup.title:
+        url_title = soup.title.string
 
     item = ShitBucketUrl()
     item.url = url
     item.url_title = url_title
+    item.source = source
 
     # Does the URL exist?
     q = current_app.db_session.query(ShitBucketUrl).filter(
@@ -75,24 +79,29 @@ def conflict(e):
 
 @app.route('/')
 @auth(abort=False)
-def index(authenticated=True):
+def index(authenticated=True, auth_key=None):
     if authenticated:
         urls = current_app.db_session.query(ShitBucketUrl).all()
     else:
         urls = current_app.db_session.query(ShitBucketUrl).filter(
             ShitBucketUrl.public == True
         )
-    return render_template('index.html', urls=urls)
+    return render_template('index.html', urls=urls, auth_key=auth_key)
 
 
-@app.route('/url/submit', methods=['POST'])
+@app.route('/url/submit', methods=['GET','POST'])
 @auth
-def url_submit():
-    url = request.form['url']
-    result = add_url(url)
-    if result:
-        return 'I heard the bell ring, so I ran to class.'
-    abort(409)
+def url_submit(auth_key=None):
+    if request.method == 'POST':
+        source = request.form['source'] if 'source' in request.form else 'api'
+        url = request.form['url']
+        result = add_url(url, source)
+        if result:
+            if source == 'web':
+                return redirect('/?auth_key={}'.format(auth_key), code=302)
+            return 'I heard the bell ring, so I ran to class.'
+        abort(409)
+    return render_template('add.html', auth_key=auth_key)
 
 
 @app.route('/bash-history/submit', methods=['POST'])

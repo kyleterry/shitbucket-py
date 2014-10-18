@@ -9,15 +9,20 @@
     <body>
         <header>
             <div id="header-content">
-                <h1>Shitbucket</h1>
+                <h1 id="logo"><a href="/?auth_key={{auth_key}}">Shitbucket</a></h1>
             </div>
         </header>
         <div id="content">
         {% block page_title %}{% endblock %}
         {% block content %}{% endblock %}
         </div>
-        <div id="footer-content">
-        {% block footer %}{% endblock %}
-        </div>
+        <footer>
+            <div id="footer-content">
+            {% block footer %}
+            <p><small>&copy; Kyle Terry</small></p>
+            <p><small>Code: <a href="https://github.com/kyleterry/shitbucket">Github</a></small></p>
+            {% endblock %}
+            </div>
+        </footer>
     </body>
 </html>

@@ -15,6 +15,7 @@ url_table = schema.Table('shitbct_url', metadata,
     schema.Column('url', types.Unicode(2000)),
     schema.Column('url_title', types.Unicode(1024)),
     schema.Column('public', types.Boolean(), default=False),
+    schema.Column('source', types.Enum('api', 'web'), default='api'),
     schema.Column('created_at', types.DateTime(), default=datetime.now)
 )
 
